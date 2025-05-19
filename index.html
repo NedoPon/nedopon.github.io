@@ -1,85 +1,118 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Электронный дневник</title>
+    <title>Школьный дневник</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }
-        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input, textarea, select, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
-        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #45a049; }
-        .hidden { display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .nav { display: flex; margin-bottom: 20px; }
-        .nav button { margin-right: 10px; }
-        .error { color: red; margin-top: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .login-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .hidden {
+            display: none;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Электронный дневник</h1>
+    <h1>Школьный электронный дневник</h1>
     
-    <div id="loginSection" class="form-container">
+    <!-- Форма входа -->
+    <div id="loginSection" class="login-form">
         <h2>Вход в систему</h2>
-        <input type="text" id="loginUsername" placeholder="Логин" value="admin">
-        <input type="password" id="loginPassword" placeholder="Пароль" value="admin1">
+        <input type="text" id="username" placeholder="Логин" value="admin">
+        <input type="password" id="password" placeholder="Пароль" value="admin1">
         <button onclick="login()">Войти</button>
-        <div id="loginError" class="error"></div>
+        <div id="error" class="error"></div>
     </div>
     
-    <!-- Остальные разделы (adminPanel, teacherPanel) остаются без изменений -->
-    <!-- ... -->
+    <!-- Контент после входа -->
+    <div id="content" class="hidden">
+        <h2>Добро пожаловать, <span id="userName"></span>!</h2>
+        <button onclick="logout()">Выйти</button>
+        <div id="adminContent" class="hidden">
+            <h3>Панель администратора</h3>
+            <p>Здесь будет управление пользователями и настройками</p>
+        </div>
+        <div id="teacherContent">
+            <h3>Журнал оценок</h3>
+            <p>Здесь будет журнал с оценками учеников</p>
+        </div>
+    </div>
 
     <script>
-        // Инициализация данных
-        function initData() {
-            if (!localStorage.getItem('users')) {
-                localStorage.setItem('users', JSON.stringify([
-                    { username: 'admin', password: 'admin1', role: 'admin' },
-                    { username: 'teacher1', password: 'teacher1', role: 'teacher' }
-                ]));
-            }
-            console.log("Данные инициализированы:", localStorage.getItem('users'));
-        }
-
+        // Данные пользователей
+        const users = [
+            { username: "admin", password: "admin1", role: "admin" },
+            { username: "teacher", password: "teacher1", role: "teacher" }
+        ];
+        
         // Функция входа
         function login() {
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorElement = document.getElementById('loginError');
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const errorElement = document.getElementById("error");
             
-            console.log("Попытка входа:", username, password);
+            // Проверка введенных данных
+            const user = users.find(u => u.username === username && u.password === password);
             
-            try {
-                const users = JSON.parse(localStorage.getItem('users')) || [];
-                const user = users.find(u => u.username === username && u.password === password);
+            if (user) {
+                // Успешный вход
+                errorElement.textContent = "";
+                document.getElementById("loginSection").classList.add("hidden");
+                document.getElementById("content").classList.remove("hidden");
+                document.getElementById("userName").textContent = user.username;
                 
-                if (user) {
-                    console.log("Успешный вход:", user);
-                    errorElement.textContent = '';
-                    
-                    // Здесь будет переключение на панель администратора/учителя
-                    alert("Вход выполнен успешно! Дальнейший функционал будет работать.");
-                    // document.getElementById('loginSection').classList.add('hidden');
-                    // document.getElementById('adminPanel').classList.remove('hidden');
-                } else {
-                    console.log("Неверные данные");
-                    errorElement.textContent = 'Неверный логин или пароль!';
+                // Показываем соответствующую панель
+                if (user.role === "admin") {
+                    document.getElementById("adminContent").classList.remove("hidden");
                 }
-            } catch (e) {
-                console.error("Ошибка при входе:", e);
-                errorElement.textContent = 'Ошибка системы. Попробуйте позже.';
+            } else {
+                // Неверные данные
+                errorElement.textContent = "Неверный логин или пароль!";
             }
         }
-
-        // Проверяем инициализацию при загрузке
+        
+        // Функция выхода
+        function logout() {
+            document.getElementById("loginSection").classList.remove("hidden");
+            document.getElementById("content").classList.add("hidden");
+            document.getElementById("username").value = "";
+            document.getElementById("password").value = "";
+        }
+        
+        // Проверяем, есть ли сохраненная сессия при загрузке страницы
         window.onload = function() {
-            console.log("Страница загружена");
-            initData();
-            
-            // Для тестирования - выводим данные в консоль
-            console.log("Текущие пользователи:", JSON.parse(localStorage.getItem('users')));
+            // В реальной системе здесь можно проверить cookie или token
+            console.log("Система дневника готова к работе");
         };
     </script>
 </body>
