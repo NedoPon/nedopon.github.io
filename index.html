@@ -5,66 +5,83 @@
     <title>Электронный дневник</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animated-entry {
+        /* ... предыдущие стили ... */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
             animation: fadeIn 0.5s ease-out;
         }
         
-        .hover-scale {
-            transition: transform 0.3s ease;
-        }
-        
-        .hover-scale:hover {
-            transform: scale(1.02);
-        }
-        
-        .role-badge {
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-        
-        .student-table {
-            border-collapse: separate;
-            border-spacing: 0 15px;
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body class="bg-light">
-    <div class="container py-5">
-        <h1 class="text-center mb-4 animated-entry">📚 Электронный дневник</h1>
-        
-        <!-- Навигация -->
-        <nav class="nav nav-pills justify-content-center mb-4 animated-entry">
+    <!-- Форма входа -->
+    <div id="loginSection" class="login-container">
+        <div class="card hover-scale">
+            <div class="card-header">
+                <h3 class="text-center">Вход в систему</h3>
+            </div>
+            <div class="card-body">
+                <form id="loginForm" onsubmit="login(event)">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" placeholder="Логин" required>
+                    </div>
+                    <div class="mb-3">
+                        <input type="password" class="form-control" placeholder="Пароль" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Войти</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной интерфейс -->
+    <div id="mainApp" class="container py-5 hidden">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="animated-entry">📚 Электронный дневник</h1>
+            <div>
+                <span id="currentUserRole" class="role-badge"></span>
+                <button onclick="logout()" class="btn btn-sm btn-secondary">Выйти</button>
+            </div>
+        </header>
+
+        <!-- Навигация (только для админов и учителей) -->
+        <nav id="mainNav" class="nav nav-pills justify-content-center mb-4 animated-entry hidden">
             <button class="nav-link active" onclick="showSection('users')">Пользователи</button>
             <button class="nav-link" onclick="showSection('grades')">Оценки</button>
         </nav>
 
-        <!-- Секция пользователей -->
-        <section id="usersSection" class="animated-entry">
+        <!-- Секция управления пользователями (только для админов) -->
+        <section id="usersSection" class="animated-entry hidden">
             <div class="card hover-scale mb-4">
                 <div class="card-header">
                     <h3>Добавить пользователя</h3>
                 </div>
                 <div class="card-body">
                     <form id="userForm" onsubmit="addUser(event)">
-                        <div class="mb-3">
-                            <input type="text" class="form-control" placeholder="Имя" required>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" placeholder="Логин" required>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="password" class="form-control" placeholder="Пароль" required>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" required>
+                                    <option value="">Роль</option>
+                                    <option>Ученик</option>
+                                    <option>Учитель</option>
+                                    <option>Родитель</option>
+                                    <option>Администратор</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Добавить</button>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <select class="form-select" required>
-                                <option value="">Выберите роль</option>
-                                <option>Ученик</option>
-                                <option>Учитель</option>
-                                <option>Родитель</option>
-                                <option>Администратор</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Добавить</button>
                     </form>
                 </div>
             </div>
@@ -73,26 +90,8 @@
         </section>
 
         <!-- Секция оценок -->
-        <section id="gradesSection" class="d-none animated-entry">
-            <div class="card hover-scale">
-                <div class="card-header">
-                    <h3>Журнал оценок</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table student-table">
-                        <thead>
-                            <tr>
-                                <th>Ученик</th>
-                                <th>Математика</th>
-                                <th>Русский</th>
-                                <th>История</th>
-                                <th>Физика</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gradesTable"></tbody>
-                    </table>
-                </div>
-            </div>
+        <section id="gradesSection" class="animated-entry hidden">
+            <!-- ... предыдущий код таблицы оценок ... -->
         </section>
     </div>
 
@@ -100,21 +99,59 @@
         // Инициализация хранилища
         if(!localStorage.users) localStorage.users = JSON.stringify([]);
         if(!localStorage.grades) localStorage.grades = JSON.stringify({});
+        let currentUser = null;
 
-        function showSection(section) {
-            document.querySelectorAll('section').forEach(s => s.classList.add('d-none'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        function login(e) {
+            e.preventDefault();
+            const form = e.target;
+            const login = form[0].value;
+            const password = form[1].value;
             
-            document.getElementById(section + 'Section').classList.remove('d-none');
-            event.target.classList.add('active');
+            const users = JSON.parse(localStorage.users);
+            const user = users.find(u => u.login === login && u.password === password);
+            
+            if(user) {
+                currentUser = user;
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                setupInterface();
+            } else {
+                alert('Неверные учетные данные!');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        function setupInterface() {
+            // Обновление интерфейса в зависимости от роли
+            document.getElementById('currentUserRole').textContent = currentUser.role;
+            document.getElementById('currentUserRole').className = `role-badge ${getRoleColor(currentUser.role)}`;
+            
+            // Показ/скрытие элементов
+            const isAdmin = currentUser.role === 'Администратор';
+            const isTeacher = currentUser.role === 'Учитель';
+            
+            document.getElementById('mainNav').classList.toggle('hidden', !(isAdmin || isTeacher));
+            document.getElementById('usersSection').classList.toggle('hidden', !isAdmin);
+            document.getElementById('gradesSection').classList.remove('hidden');
+            
+            renderUsers();
+            renderGrades();
         }
 
         function addUser(e) {
             e.preventDefault();
+            if(currentUser.role !== 'Администратор') return;
+            
             const form = e.target;
             const user = {
-                name: form[0].value,
-                role: form[1].value,
+                login: form[0].value,
+                password: form[1].value,
+                role: form[2].value,
                 id: Date.now()
             };
 
@@ -127,20 +164,15 @@
         }
 
         function renderUsers() {
+            if(currentUser.role !== 'Администратор') return;
+            
             const users = JSON.parse(localStorage.users);
-            const colors = {
-                'Ученик': 'bg-primary',
-                'Учитель': 'bg-success',
-                'Родитель': 'bg-warning',
-                'Администратор': 'bg-danger'
-            };
-
             const html = users.map(user => `
                 <div class="col-md-3 mb-3">
                     <div class="card hover-scale">
                         <div class="card-body">
-                            <h5>${user.name}</h5>
-                            <span class="role-badge ${colors[user.role]} text-white">
+                            <h5>${user.login}</h5>
+                            <span class="role-badge ${getRoleColor(user.role)} text-white">
                                 ${user.role}
                             </span>
                         </div>
@@ -154,16 +186,19 @@
         function renderGrades() {
             const grades = JSON.parse(localStorage.grades);
             const users = JSON.parse(localStorage.users).filter(u => u.role === 'Ученик');
+            const canEdit = ['Администратор', 'Учитель'].includes(currentUser.role);
             
             const html = users.map(student => `
                 <tr>
-                    <td>${student.name}</td>
+                    <td>${student.login}</td>
                     ${['Математика', 'Русский', 'История', 'Физика'].map(subject => `
                         <td>
-                            <input type="number" min="2" max="5" 
-                                   value="${grades[student.id]?.[subject] || ''}" 
-                                   onchange="updateGrade(${student.id}, '${subject}', this.value)"
-                                   class="form-control form-control-sm">
+                            ${canEdit ? `
+                                <input type="number" min="2" max="5" 
+                                       value="${grades[student.id]?.[subject] || ''}" 
+                                       onchange="updateGrade(${student.id}, '${subject}', this.value)"
+                                       class="form-control form-control-sm">
+                            ` : (grades[student.id]?.[subject] || '-')}
                         </td>
                     `).join('')}
                 </tr>
@@ -172,16 +207,17 @@
             document.getElementById('gradesTable').innerHTML = html;
         }
 
-        function updateGrade(studentId, subject, grade) {
-            const grades = JSON.parse(localStorage.grades);
-            if(!grades[studentId]) grades[studentId] = {};
-            grades[studentId][subject] = grade;
-            localStorage.grades = JSON.stringify(grades);
+        function getRoleColor(role) {
+            const colors = {
+                'Ученик': 'bg-primary',
+                'Учитель': 'bg-success',
+                'Родитель': 'bg-warning',
+                'Администратор': 'bg-danger'
+            };
+            return colors[role];
         }
 
-        // Первоначальная загрузка
-        renderUsers();
-        renderGrades();
+        // ... остальные функции из предыдущего кода ...
     </script>
 </body>
 </html>
