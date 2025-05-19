@@ -2,74 +2,107 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Электронный дневник</title>
+    <title>Электронный дневник DitectorTwich</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* ... предыдущие стили ... */
-        .login-container {
-            max-width: 400px;
-            margin: 100px auto;
-            animation: fadeIn 0.5s ease-out;
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --admin-color: #e74c3c;
+            --teacher-color: #2ecc71;
+            --parent-color: #f1c40f;
+            --student-color: #9b59b6;
         }
-        
-        .hidden {
-            display: none !important;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animated-entry { animation: fadeIn 0.5s ease-out; }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+
+        .role-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .admin-badge { background: var(--admin-color); }
+        .teacher-badge { background: var(--teacher-color); }
+        .parent-badge { background: var(--parent-color); }
+        .student-badge { background: var(--student-color); }
+
+        .grade-input {
+            width: 60px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .grade-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: none;
         }
     </style>
 </head>
 <body class="bg-light">
     <!-- Форма входа -->
-    <div id="loginSection" class="login-container">
-        <div class="card hover-scale">
-            <div class="card-header">
-                <h3 class="text-center">Вход в систему</h3>
+    <div id="loginSection" class="container mt-5" style="max-width: 400px;">
+        <div class="card shadow-lg hover-scale animated-entry">
+            <div class="card-header bg-primary text-white">
+                <h3 class="text-center mb-0">Вход в систему</h3>
             </div>
             <div class="card-body">
-                <form id="loginForm" onsubmit="login(event)">
+                <form id="loginForm" onsubmit="return Auth.login(event)">
                     <div class="mb-3">
                         <input type="text" class="form-control" placeholder="Логин" required>
                     </div>
                     <div class="mb-3">
                         <input type="password" class="form-control" placeholder="Пароль" required>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Войти</button>
+                    <button type="submit" class="btn btn-light w-100 text-primary">Войти</button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Основной интерфейс -->
-    <div id="mainApp" class="container py-5 hidden">
+    <!-- Основное приложение -->
+    <div id="mainApp" class="container py-4 d-none">
+        <!-- Шапка -->
         <header class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="animated-entry">📚 Электронный дневник</h1>
+            <h1 class="text-primary animated-entry">🏫 Дневник DitectorTwich</h1>
             <div>
-                <span id="currentUserRole" class="role-badge"></span>
-                <button onclick="logout()" class="btn btn-sm btn-secondary">Выйти</button>
+                <span id="currentUserBadge" class="role-badge"></span>
+                <button onclick="Auth.logout()" class="btn btn-sm btn-outline-danger">Выйти</button>
             </div>
         </header>
 
-        <!-- Навигация (только для админов и учителей) -->
-        <nav id="mainNav" class="nav nav-pills justify-content-center mb-4 animated-entry hidden">
-            <button class="nav-link active" onclick="showSection('users')">Пользователи</button>
-            <button class="nav-link" onclick="showSection('grades')">Оценки</button>
+        <!-- Навигация -->
+        <nav id="mainNav" class="nav nav-pills justify-content-center mb-4 animated-entry d-none">
+            <button class="nav-link active" data-section="users">Пользователи</button>
+            <button class="nav-link" data-section="grades">Оценки</button>
         </nav>
 
-        <!-- Секция управления пользователями (только для админов) -->
-        <section id="usersSection" class="animated-entry hidden">
-            <div class="card hover-scale mb-4">
-                <div class="card-header">
-                    <h3>Добавить пользователя</h3>
+        <!-- Секция пользователей -->
+        <section id="usersSection" class="animated-entry d-none">
+            <div class="card shadow-sm mb-4 hover-scale">
+                <div class="card-header bg-admin-color text-white">
+                    <h4 class="mb-0">Управление пользователями</h4>
                 </div>
                 <div class="card-body">
-                    <form id="userForm" onsubmit="addUser(event)">
-                        <div class="row g-3">
-                            <div class="col-md-4">
+                    <form id="userForm" onsubmit="return Admin.addUser(event)">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-5">
                                 <input type="text" class="form-control" placeholder="Логин" required>
                             </div>
                             <div class="col-md-4">
                                 <input type="password" class="form-control" placeholder="Пароль" required>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <select class="form-select" required>
                                     <option value="">Роль</option>
                                     <option>Ученик</option>
@@ -78,146 +111,231 @@
                                     <option>Администратор</option>
                                 </select>
                             </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">Добавить</button>
-                            </div>
                         </div>
+                        <button type="submit" class="btn btn-admin-color w-100 text-white">
+                            Добавить пользователя
+                        </button>
                     </form>
                 </div>
             </div>
 
-            <div class="row" id="usersList"></div>
+            <div class="row g-3" id="usersList"></div>
         </section>
 
         <!-- Секция оценок -->
-        <section id="gradesSection" class="animated-entry hidden">
-            <!-- ... предыдущий код таблицы оценок ... -->
+        <section id="gradesSection" class="animated-entry d-none">
+            <div class="card shadow-sm hover-scale">
+                <div class="card-header bg-teacher-color text-white">
+                    <h4 class="mb-0">Журнал успеваемости</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ученик</th>
+                                    <th>Математика</th>
+                                    <th>Русский язык</th>
+                                    <th>История</th>
+                                    <th>Физика</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </section>
     </div>
 
     <script>
-        // Инициализация хранилища
-        if(!localStorage.users) localStorage.users = JSON.stringify([]);
-        if(!localStorage.grades) localStorage.grades = JSON.stringify({});
-        let currentUser = null;
+        // Инициализация системы
+        const DataManager = {
+            init() {
+                const defaultAdmin = {
+                    login: 'DitectorTwich',
+                    password: 'beebra',
+                    role: 'Администратор',
+                    id: 1,
+                    created: new Date().toISOString()
+                };
 
-        function login(e) {
-            e.preventDefault();
-            const form = e.target;
-            const login = form[0].value;
-            const password = form[1].value;
-            
-            const users = JSON.parse(localStorage.users);
-            const user = users.find(u => u.login === login && u.password === password);
-            
-            if(user) {
-                currentUser = user;
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                setupInterface();
-            } else {
-                alert('Неверные учетные данные!');
+                if (!localStorage.users) {
+                    localStorage.users = JSON.stringify([defaultAdmin]);
+                } else {
+                    const users = JSON.parse(localStorage.users);
+                    if (!users.some(u => u.login === 'DitectorTwich')) {
+                        users.push(defaultAdmin);
+                        localStorage.users = JSON.stringify(users);
+                    }
+                }
+
+                if (!localStorage.grades) localStorage.grades = JSON.stringify({});
+            },
+
+            getUsers() {
+                return JSON.parse(localStorage.users);
+            },
+
+            saveUser(user) {
+                const users = this.getUsers();
+                users.push(user);
+                localStorage.users = JSON.stringify(users);
+            },
+
+            getGrades() {
+                return JSON.parse(localStorage.grades);
+            },
+
+            updateGrades(grades) {
+                localStorage.grades = JSON.stringify(grades);
             }
-        }
+        };
 
-        function logout() {
-            currentUser = null;
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('loginSection').classList.remove('hidden');
-        }
+        const Auth = {
+            currentUser: null,
 
-        function setupInterface() {
-            // Обновление интерфейса в зависимости от роли
-            document.getElementById('currentUserRole').textContent = currentUser.role;
-            document.getElementById('currentUserRole').className = `role-badge ${getRoleColor(currentUser.role)}`;
-            
-            // Показ/скрытие элементов
-            const isAdmin = currentUser.role === 'Администратор';
-            const isTeacher = currentUser.role === 'Учитель';
-            
-            document.getElementById('mainNav').classList.toggle('hidden', !(isAdmin || isTeacher));
-            document.getElementById('usersSection').classList.toggle('hidden', !isAdmin);
-            document.getElementById('gradesSection').classList.remove('hidden');
-            
-            renderUsers();
-            renderGrades();
-        }
+            login(e) {
+                e.preventDefault();
+                const form = e.target;
+                const login = form[0].value;
+                const password = form[1].value;
 
-        function addUser(e) {
-            e.preventDefault();
-            if(currentUser.role !== 'Администратор') return;
-            
-            const form = e.target;
-            const user = {
-                login: form[0].value,
-                password: form[1].value,
-                role: form[2].value,
-                id: Date.now()
-            };
+                const user = DataManager.getUsers().find(u => 
+                    u.login === login && u.password === password
+                );
 
-            const users = JSON.parse(localStorage.users);
-            users.push(user);
-            localStorage.users = JSON.stringify(users);
+                if (user) {
+                    this.currentUser = user;
+                    UI.showMainApp();
+                    return true;
+                }
 
-            renderUsers();
-            form.reset();
-        }
+                alert('Ошибка входа! Проверьте логин и пароль');
+                return false;
+            },
 
-        function renderUsers() {
-            if(currentUser.role !== 'Администратор') return;
-            
-            const users = JSON.parse(localStorage.users);
-            const html = users.map(user => `
-                <div class="col-md-3 mb-3">
-                    <div class="card hover-scale">
-                        <div class="card-body">
-                            <h5>${user.login}</h5>
-                            <span class="role-badge ${getRoleColor(user.role)} text-white">
-                                ${user.role}
-                            </span>
+            logout() {
+                this.currentUser = null;
+                UI.showLogin();
+            }
+        };
+
+        const Admin = {
+            addUser(e) {
+                e.preventDefault();
+                if (Auth.currentUser?.role !== 'Администратор') return;
+
+                const form = e.target;
+                const newUser = {
+                    login: form[0].value,
+                    password: form[1].value,
+                    role: form[2].value,
+                    id: Date.now(),
+                    created: new Date().toISOString()
+                };
+
+                DataManager.saveUser(newUser);
+                UI.renderUsers();
+                form.reset();
+            }
+        };
+
+        const Grades = {
+            update(studentId, subject, value) {
+                if (!['Администратор', 'Учитель'].includes(Auth.currentUser?.role)) return;
+
+                const grades = DataManager.getGrades();
+                if (!grades[studentId]) grades[studentId] = {};
+                grades[studentId][subject] = value;
+                DataManager.updateGrades(grades);
+                UI.renderGrades();
+            }
+        };
+
+        const UI = {
+            showLogin() {
+                document.getElementById('loginSection').classList.remove('d-none');
+                document.getElementById('mainApp').classList.add('d-none');
+            },
+
+            showMainApp() {
+                document.getElementById('loginSection').classList.add('d-none');
+                document.getElementById('mainApp').classList.remove('d-none');
+                this.updateInterface();
+            },
+
+            updateInterface() {
+                const { role } = Auth.currentUser;
+                const isAdmin = role === 'Администратор';
+                const isTeacher = role === 'Учитель';
+
+                // Обновление бейджа
+                const badge = document.getElementById('currentUserBadge');
+                badge.textContent = role;
+                badge.className = `role-badge ${role.toLowerCase()}-badge`;
+
+                // Управление видимостью разделов
+                document.getElementById('mainNav').classList.toggle('d-none', !(isAdmin || isTeacher));
+                document.getElementById('usersSection').classList.toggle('d-none', !isAdmin);
+                document.getElementById('gradesSection').classList.remove('d-none');
+
+                this.renderUsers();
+                this.renderGrades();
+            },
+
+            renderUsers() {
+                if (Auth.currentUser?.role !== 'Администратор') return;
+
+                const users = DataManager.getUsers();
+                const html = users.map(user => `
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card mb-3 hover-scale">
+                            <div class="card-body">
+                                <h5 class="card-title">${user.login}</h5>
+                                <span class="role-badge ${user.role.toLowerCase()}-badge">
+                                    ${user.role}
+                                </span>
+                                <small class="text-muted d-block mt-2">
+                                    Создан: ${new Date(user.created).toLocaleDateString()}
+                                </small>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
 
-            document.getElementById('usersList').innerHTML = html;
-        }
+                document.getElementById('usersList').innerHTML = html;
+            },
 
-        function renderGrades() {
-            const grades = JSON.parse(localStorage.grades);
-            const users = JSON.parse(localStorage.users).filter(u => u.role === 'Ученик');
-            const canEdit = ['Администратор', 'Учитель'].includes(currentUser.role);
-            
-            const html = users.map(student => `
-                <tr>
-                    <td>${student.login}</td>
-                    ${['Математика', 'Русский', 'История', 'Физика'].map(subject => `
-                        <td>
-                            ${canEdit ? `
-                                <input type="number" min="2" max="5" 
-                                       value="${grades[student.id]?.[subject] || ''}" 
-                                       onchange="updateGrade(${student.id}, '${subject}', this.value)"
-                                       class="form-control form-control-sm">
-                            ` : (grades[student.id]?.[subject] || '-')}
-                        </td>
-                    `).join('')}
-                </tr>
-            `).join('');
+            renderGrades() {
+                const grades = DataManager.getGrades();
+                const students = DataManager.getUsers().filter(u => u.role === 'Ученик');
+                const canEdit = ['Администратор', 'Учитель'].includes(Auth.currentUser?.role);
 
-            document.getElementById('gradesTable').innerHTML = html;
-        }
+                const html = students.map(student => `
+                    <tr>
+                        <td>${student.login}</td>
+                        ${['Математика', 'Русский язык', 'История', 'Физика'].map(subject => `
+                            <td>
+                                ${canEdit ? `
+                                    <input type="number" 
+                                           min="2" 
+                                           max="5" 
+                                           value="${grades[student.id]?.[subject] || ''}"
+                                           class="grade-input form-control"
+                                           onchange="Grades.update(${student.id}, '${subject}', this.value)">
+                                ` : (grades[student.id]?.[subject] || '-')}
+                            </td>
+                        `).join('')}
+                    </tr>
+                `).join('');
 
-        function getRoleColor(role) {
-            const colors = {
-                'Ученик': 'bg-primary',
-                'Учитель': 'bg-success',
-                'Родитель': 'bg-warning',
-                'Администратор': 'bg-danger'
-            };
-            return colors[role];
-        }
+                document.getElementById('gradesTable').innerHTML = html;
+            }
+        };
 
-        // ... остальные функции из предыдущего кода ...
+        // Инициализация при загрузке
+        DataManager.init();
     </script>
 </body>
 </html>
