@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Электронный дневник</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .form-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, textarea, select, button { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .nav { display: flex; margin-bottom: 20px; }
+        .nav button { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Электронный дневник</h1>
+    <div id="loginSection" class="form-container">
+        <h2>Вход в систему</h2>
+        <input type="text" id="loginUsername" placeholder="Логин" value="admin">
+        <input type="password" id="loginPassword" placeholder="Пароль" value="admin1">
+        <button onclick="login()">Войти</button>
+    </div>
+    
+    <div id="adminPanel" class="hidden">
+        <div class="nav">
+            <button onclick="showSection('usersSection')">Пользователи</button>
+            <button onclick="showSection('studentsSection')">Ученики</button>
+            <button onclick="showSection('gradesSection')">Оценки</button>
+            <button onclick="logout()">Выйти</button>
+        </div>
+        
+        <div id="usersSection">
+            <h2>Управление пользователями</h2>
+            <div class="form-container">
+                <h3>Создать нового пользователя</h3>
+                <input type="text" id="newUsername" placeholder="Логин">
+                <input type="password" id="newPassword" placeholder="Пароль">
+                <select id="newUserRole">
+                    <option value="teacher">Учитель</option>
+                    <option value="admin">Администратор</option>
+                </select>
+                <button onclick="createUser()">Создать пользователя</button>
+            </div>
+            <h3>Список пользователей</h3>
+            <table id="usersTable"><thead><tr><th>Логин</th><th>Роль</th><th>Действия</th></tr></thead><tbody></tbody></table>
+        </div>
+        
+        <div id="studentsSection" class="hidden">
+            <h2>Управление учениками</h2>
+            <div class="form-container">
+                <h3>Добавить ученика</h3>
+                <input type="text" id="studentName" placeholder="ФИО">
+                <input type="text" id="studentClass" placeholder="Класс">
+                <button onclick="addStudent()">Добавить</button>
+            </div>
+            <h3>Список учеников</h3>
+            <table id="studentsTable"><thead><tr><th>ФИО</th><th>Класс</th><th>Действия</th></tr></thead><tbody></tbody></table>
+        </div>
+        
+        <div id="gradesSection" class="hidden">
+            <h2>Журнал оценок</h2>
+            <div class="form-container">
+                <h3>Добавить оценку</h3>
+                <select id="gradeStudent"></select>
+                <select id="gradeSubject">
+                    <option value="math">Математика</option>
+                    <option value="russian">Русский язык</option>
+                    <option value="literature">Литература</option>
+                    <option value="history">История</option>
+                    <option value="biology">Биология</option>
+                </select>
+                <input type="number" id="gradeValue" min="1" max="5" placeholder="Оценка">
+                <input type="date" id="gradeDate">
+                <button onclick="addGrade()">Добавить оценку</button>
+            </div>
+            <h3>Оценки учеников</h3>
+            <table id="gradesTable"><thead><tr><th>Ученик</th><th>Предмет</th><th>Оценка</th><th>Дата</th><th>Действия</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+    
+    <div id="teacherPanel" class="hidden">
+        <div class="nav">
+            <button onclick="showTeacherSection('teacherGradesSection')">Журнал оценок</button>
+            <button onclick="logout()">Выйти</button>
+        </div>
+        <div id="teacherGradesSection">
+            <h2>Журнал оценок</h2>
+            <div class="form-container">
+                <h3>Добавить оценку</h3>
+                <select id="teacherGradeStudent"></select>
+                <select id="teacherGradeSubject">
+                    <option value="math">Математика</option>
+                    <option value="russian">Русский язык</option>
+                    <option value="literature">Литература</option>
+                    <option value="history">История</option>
+                    <option value="biology">Биология</option>
+                </select>
+                <input type="number" id="teacherGradeValue" min="1" max="5" placeholder="Оценка">
+                <input type="date" id="teacherGradeDate">
+                <button onclick="addTeacherGrade()">Добавить оценку</button>
+            </div>
+            <h3>Оценки учеников</h3>
+            <table id="teacherGradesTable"><thead><tr><th>Ученик</th><th>Предмет</th><th>Оценка</th><th>Дата</th><th>Действия</th></tr></thead><tbody></tbody></table>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация данных
+        function initData() {
+            if (!localStorage.getItem('users')) {
+                localStorage.setItem('users', JSON.stringify([
+                    { username: 'admin', password: 'admin1', role: 'admin' },
+                    { username: 'teacher1', password: 'teacher1', role: 'teacher' }
+                ]));
+            }
+            if (!localStorage.getItem('students')) {
+                localStorage.setItem('students', JSON.stringify([
+                    { id: 1, name: 'Иванов Иван', class: '5А' },
+                    { id: 2, name: 'Петрова Мария', class: '5А' }
+                ]));
+            }
+            if (!localStorage.getItem('grades')) {
+                localStorage.setItem('grades', JSON.stringify([
+                    { id: 1, studentId: 1, subject: 'math', value: 5, date: new Date().toISOString().split('T')[0] }
+                ]));
+            }
+            updateStudentSelects();
+        }
+
+        // Все функции из предыдущего кода (login, logout, createUser и т.д.)
+        // ... [вставьте сюда все JavaScript-функции из предыдущего примера] ...
+        
+        // Инициализация при загрузке
+        window.onload = function() {
+            initData();
+        };
+    </script>
+</body>
+  </html>
