@@ -27,7 +27,6 @@
             padding: 8px 15px;
             border-radius: 20px;
             font-size: 0.9em;
-            background: var(--primary-color);
             color: white;
         }
 
@@ -83,12 +82,12 @@
 
         <!-- Навигация -->
         <nav id="mainNav" class="nav nav-pills justify-content-center mb-4 animated-entry d-none">
-            <button class="nav-link active" data-section="users">Пользователи</button>
-            <button class="nav-link" data-section="grades">Оценки</button>
+            <button class="nav-link active" onclick="UI.showSection('users')">Пользователи</button>
+            <button class="nav-link" onclick="UI.showSection('grades')">Оценки</button>
         </nav>
 
         <!-- Секция пользователей -->
-        <section id="usersSection" class="animated-entry d-none">
+        <section id="usersSection" class="animated-entry">
             <div class="card shadow-sm mb-4 hover-scale">
                 <div class="card-header bg-admin-color text-white">
                     <h4 class="mb-0">Управление пользователями</h4>
@@ -149,7 +148,6 @@
     </div>
 
     <script>
-        // Инициализация системы
         const DataManager = {
             init() {
                 const defaultAdmin = {
@@ -171,6 +169,12 @@
                 }
 
                 if (!localStorage.grades) localStorage.grades = JSON.stringify({});
+                
+                // Восстановление сессии
+                if (localStorage.currentUser) {
+                    Auth.currentUser = JSON.parse(localStorage.currentUser);
+                    UI.showMainApp();
+                }
             },
 
             getUsers() {
@@ -207,6 +211,7 @@
 
                 if (user) {
                     this.currentUser = user;
+                    localStorage.currentUser = JSON.stringify(user);
                     UI.showMainApp();
                     return true;
                 }
@@ -217,6 +222,7 @@
 
             logout() {
                 this.currentUser = null;
+                localStorage.removeItem('currentUser');
                 UI.showLogin();
             }
         };
@@ -237,6 +243,7 @@
 
                 DataManager.saveUser(newUser);
                 UI.renderUsers();
+                UI.renderGrades(); // Добавлено обновление оценок
                 form.reset();
             }
         };
@@ -263,6 +270,15 @@
                 document.getElementById('loginSection').classList.add('d-none');
                 document.getElementById('mainApp').classList.remove('d-none');
                 this.updateInterface();
+                this.showSection('users');
+            },
+
+            showSection(section) {
+                document.querySelectorAll('section').forEach(s => s.classList.add('d-none'));
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                
+                document.getElementById(`${section}Section`).classList.remove('d-none');
+                event.target.classList.add('active');
             },
 
             updateInterface() {
@@ -275,13 +291,8 @@
                 badge.textContent = role;
                 badge.className = `role-badge ${role.toLowerCase()}-badge`;
 
-                // Управление видимостью разделов
+                // Управление видимостью навигации
                 document.getElementById('mainNav').classList.toggle('d-none', !(isAdmin || isTeacher));
-                document.getElementById('usersSection').classList.toggle('d-none', !isAdmin);
-                document.getElementById('gradesSection').classList.remove('d-none');
-
-                this.renderUsers();
-                this.renderGrades();
             },
 
             renderUsers() {
