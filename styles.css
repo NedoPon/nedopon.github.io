@@ -1,0 +1,95 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #ece9e6, #ffffff);
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+}
+
+nav {
+    margin-top: 10px;
+}
+
+button {
+    background-color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #ddd;
+}
+
+.content {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+#gradesSection.hidden {
+    display: none;
+}
+
+#gradesTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+#gradesTable th,
+#gradesTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+#gradesTable th {
+    background-color: #f2f2f2;
+}
+
+.form-container {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+form input {
+    margin-right: 10px;
+    padding: 8px;
+}
+
+form button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+footer {
+    text-align: center;
+    padding: 15px;
+    background-color: #333;
+    color: white;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation-name: fadeIn; 
+  animation-duration: 1s; 
+}
